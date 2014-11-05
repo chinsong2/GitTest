@@ -22,51 +22,19 @@ namespace com.hitops.PLN.RSC.ResourcePlan
         ArrayList arWorker = new ArrayList();
         string m_sCompFull = "";
 
-        public frmWorkerEntry(frmWorkerMng sForm, string WrkID, string WrkNm, string WTeam, string WPaWd, string WAvail, string WEmply, string WAuthd, string WChief)
+        public frmWorkerEntry(
+            frmWorkerMng sForm, string WrkID, string WrkNm, string WTeam, string WPaWd, string WEmply, string WAuthd, 
+            string MainEQP, string SUB1_EQP, string SUB2_EQP, string MainEQPClass, string SUB1_EQP_Class, string SUB2_EQP_CLASS)
         {
             InitializeComponent();
             _Form = sForm;
             Program.SetTeam(cmbTeam, false, false);
             SetMandatory();
-            SetData(WrkID, WrkNm, WTeam, WPaWd, WAvail, WEmply, WAuthd, WChief, "", "");
+            SetData(WrkID, WrkNm, WTeam, WPaWd, WEmply, WAuthd, MainEQP, SUB1_EQP, SUB2_EQP, MainEQPClass, SUB1_EQP_Class, SUB2_EQP_CLASS);
 
-            tbxPwd.Enabled = false;
             tbxWrker.Enabled = false;
             tbxName.Enabled = false;
             cmbTeam.Enabled = true ;
-        }
-
-        public frmWorkerEntry(frmWorkerMng sForm, string WrkID, string WrkNm, string WTeam, string WPaWd, string WAvail, string WEmply, string WAuthd, string WChief,
-            string sCompCod, string sCompDesc, string sSort, string sAllocVisible)
-        {
-            InitializeComponent();
-            _Form = sForm;
-            Program.SetTeam(cmbTeam, false, false);
-            SetMandatory();
-            SetData(WrkID, WrkNm, WTeam, WPaWd, WAvail, WEmply, WAuthd, WChief, sSort, sAllocVisible);
-
-            tbxPwd.Enabled = false;
-            tbxWrker.Enabled = false;
-            tbxName.Enabled = false;
-            cmbTeam.Enabled = true;
-            cmbVisible.Enabled = true;
-            m_sCompFull = sCompCod + ":" + sCompDesc;
-        }
-
-        public frmWorkerEntry(string WrkID, string WrkNm, string WTeam, string WPaWd, string WAvail, string WEmply, string WAuthd, string WChief,
-            string sCompCod, string sCompDesc, string sSort, string sAllocVisible)
-        {
-            InitializeComponent();
-            Program.SetTeam(cmbTeam, false, false);
-            SetMandatory();
-            SetData(WrkID, WrkNm, WTeam, WPaWd, WAvail, WEmply, WAuthd, WChief, sSort, sAllocVisible);
-
-            tbxPwd.Enabled = false;
-            tbxWrker.Enabled = false;
-            tbxName.Enabled = false;
-            cmbTeam.Enabled = true;
-            cmbVisible.Enabled = true;
-            m_sCompFull = sCompCod + ":" + sCompDesc;
         }
 
         public frmWorkerEntry(frmWorkerMng sForm)
@@ -77,18 +45,31 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             SetMandatory();
         }
 
-        private void SetData(string WrkID, string WrkNm, string WTeam, string WPaWd, string WAvail, string WEmply, string WAuthd, string WChief, string sSort, string sAllocVisible)
+        private void SetData(string WrkID, string WrkNm, string WTeam, string WPaWd, string WEmply, string WAuthd,
+            string MainEQP, string SUB1_EQP, string SUB2_EQP, string MainEQPClass, string SUB1_EQP_Class, string SUB2_EQP_CLASS)
         {
             tbxName.Text = WrkNm;
             tbxWrker.Text = WrkID;
             cmbTeam.Text = WTeam;
             tbxPwd.Text = WPaWd;
-            cmbAut.Text = WAuthd;
-            cmbEmp.Text = WEmply;
-            cmbChief.Text = WChief;
-            cmbAvail.Text = WAvail;
-            txtSort.Text = sSort;
-            cmbVisible.Text = sAllocVisible;
+            cmbAut.SelectedIndex = int.Parse(WAuthd);
+
+            for (int idxItm = 0; idxItm < cmbEmpType.Items.Count; idxItm++)
+            {
+                String sItem = (String)cmbEmpType.Items[idxItm];
+                if (sItem.Length > 2 && sItem.Substring(0, 2).Trim() == WEmply)
+                {
+                    cmbEmpType.SelectedIndex = idxItm;
+                }
+            }
+
+            cmbEqp_Main.Text = MainEQP;
+            cmbEqp_Sub1.Text = SUB1_EQP;
+            cmbEqp_Sub2.Text = SUB2_EQP;
+
+            cmbCls_Main.Text = MainEQPClass;
+            cmbCls_Sub1.Text = SUB1_EQP_Class;
+            cmbCls_Sub2.Text = SUB2_EQP_CLASS;
         }
 
         private void SetMandatory()
@@ -98,10 +79,7 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             arWorker.Add(tbxName);
             arWorker.Add(cmbTeam);
             arWorker.Add(cmbAut);
-            arWorker.Add(cmbAvail);
-            arWorker.Add(cmbChief);
-            arWorker.Add(cmbEmp);
-            arWorker.Add(cmbCompany);
+            arWorker.Add(cmbEmpType);
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -119,22 +97,17 @@ namespace com.hitops.PLN.RSC.ResourcePlan
 
             try
             {
-                if (cmbCompany.Text.Trim().Length > 0)
-                {
-                    string[] aComp = cmbCompany.Text.Split(':');
-                    sCompCod = aComp[0];
-                }
                 hTable.Add("WORKER_ID", tbxWrker.Text);
                 hTable.Add("WORKER_NAME", tbxName.Text);
                 hTable.Add("TEAM", cmbTeam.Text);
-                hTable.Add("WORKER_KND", cmbAvail.Text);
+                hTable.Add("WORKER_KND", "Y"); //앞으로 사용안함. 기본 "Y" 로 넣어줌. Available 의미로 사용되었음
                 hTable.Add("PASWRD", tbxPwd.Text);
-                hTable.Add("EMPLOY_TYP", cmbEmp.Text);
-                hTable.Add("CHIEF_TAG", cmbChief.Text);
-                hTable.Add("AUTHORITY", cmbAut.Text);
-                hTable.Add("COMP_COD", sCompCod);
-                hTable.Add("SORT_SEQ", txtSort.Text);
-                hTable.Add("ALLOC_VISIBLE", cmbVisible.Text);
+                hTable.Add("EMPLOY_TYP", cmbEmpType.Text.Substring(0,1));
+                hTable.Add("CHIEF_TAG", "Y"); //앞으로 사용안함. 기본 "Y" 로 넣어줌.
+                hTable.Add("AUTHORITY", cmbAut.SelectedIndex.ToString());
+                hTable.Add("COMP_COD", "-");
+                hTable.Add("SORT_SEQ", "0");  //앞으로 사용안함. 기본 "0" 로 넣어줌.
+                hTable.Add("ALLOC_VISIBLE", "Y");  //앞으로 사용안함. 기본 "Y" 로 넣어줌.
                 hTable.Add("INPUT_PSN", CommFunc.gloUserID);
                 aList = (ArrayList)RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-GETWORKERINFO", _mID, hTable);
 
@@ -172,11 +145,11 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             hTable.Add("WORKER_ID",  tbxWrker.Text);
             hTable.Add("WORKER_NAME",tbxName.Text);
             hTable.Add("TEAM",       cmbTeam.Text);
-            hTable.Add("WORKER_KND", cmbAvail.Text);
+            hTable.Add("WORKER_KND", "Y"); //앞으로 사용안함. 기본 "Y" 로 넣어줌. Available 의미로 사용되었음
             hTable.Add("PASWRD",     tbxPwd.Text);
-            hTable.Add("EMPLOY_TYP", cmbEmp.Text);
-            hTable.Add("CHIEF_TAG",  cmbChief.Text);
-            hTable.Add("AUTHORITY",  cmbAut.Text);
+            hTable.Add("EMPLOY_TYP", cmbEmpType.Text.Substring(0, 1));
+            hTable.Add("CHIEF_TAG",  "Y");
+            hTable.Add("AUTHORITY", cmbAut.SelectedIndex.ToString());
             hTable.Add("UPDATE_PSN", CommFunc.gloUserID);
 
             try
@@ -203,35 +176,11 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             this.Icon = CommFunc.GetMainIcon(CommFunc.MainIcon.Resource);
             this.AutoScaleMode = AutoScaleMode.None;
             Program.SetTeam(cmbTeam, false, false);
-            SetCompany();
+            Program.SetWorkerEqpTyp(cmbEqp_Main, false, false);
+            Program.SetWorkerEqpTyp(cmbEqp_Sub1, false, false);
+            Program.SetWorkerEqpTyp(cmbEqp_Sub2, false, false);
+
             this.WindowState = FormWindowState.Normal;
-        }
-
-        private void SetCompany()
-        {
-            try
-            {
-                ArrayList aList = (ArrayList)RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-LSTWORKCOMPANY", _mID);
-
-                cmbCompany.Items.Clear();
-                foreach (Hashtable hComp in aList)
-                {
-                    cmbCompany.Items.Add(hComp["COMP_COD"] + ":" + hComp["COMP_DESC"]);
-                }
-
-                for(int i=0; i<cmbCompany.Items.Count; i++)
-                {
-                    if (cmbCompany.Items[i].ToString() == m_sCompFull)
-                    {
-                        cmbCompany.SelectedIndex = i;
-                        break;
-                    }
-                }
-            }
-            catch (HMMException ex)
-            {
-                MessageBox.Show(ex.Message1);
-            }
         }
 
         private void tbbExit_Click(object sender, EventArgs e)
@@ -253,30 +202,5 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             CommFunc.TextViewFalseMode(tbrToolBar);
         }
 
-        private void txtSort_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            try
-            {
-                switch (e.KeyChar)
-                {
-                    case (char)Keys.Back:
-                    case (char)Keys.Enter:
-                    case (char)Keys.Delete:
-                        break;
-                    default:
-                        if (e.KeyChar < 48 || e.KeyChar > 57)
-                        {
-                            MessageBox.Show("Insert into numeric data type.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                            e.Handled = true;
-                            this.txtSort.Focus();
-                        }
-                        break;
-                }
-            }
-            catch (HMMException ex)
-            {
-                CommFunc.ShowExceptionBox(ex);
-            }
-        }
     }
 }
