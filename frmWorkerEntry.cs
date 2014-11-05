@@ -32,7 +32,7 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             SetMandatory();
             SetData(WrkID, WrkNm, WTeam, WPaWd, WEmply, WAuthd, MainEQP, SUB1_EQP, SUB2_EQP, MainEQPClass, SUB1_EQP_Class, SUB2_EQP_CLASS);
 
-            tbxWrker.Enabled = false;
+            tbxWrkerID.Enabled = false;
             tbxName.Enabled = false;
             cmbTeam.Enabled = true ;
         }
@@ -49,7 +49,7 @@ namespace com.hitops.PLN.RSC.ResourcePlan
             string MainEQP, string SUB1_EQP, string SUB2_EQP, string MainEQPClass, string SUB1_EQP_Class, string SUB2_EQP_CLASS)
         {
             tbxName.Text = WrkNm;
-            tbxWrker.Text = WrkID;
+            tbxWrkerID.Text = WrkID;
             cmbTeam.Text = WTeam;
             tbxPwd.Text = WPaWd;
             cmbAut.SelectedIndex = int.Parse(WAuthd);
@@ -74,7 +74,7 @@ namespace com.hitops.PLN.RSC.ResourcePlan
 
         private void SetMandatory()
         {
-            arWorker.Add(tbxWrker);
+            arWorker.Add(tbxWrkerID);
             arWorker.Add(tbxPwd);
             arWorker.Add(tbxName);
             arWorker.Add(cmbTeam);
@@ -85,6 +85,11 @@ namespace com.hitops.PLN.RSC.ResourcePlan
         private void btnSave_Click(object sender, EventArgs e)
         {
             CreateWorker();
+            MergeDetail();
+
+            if (_Form != null)
+                _Form.sLoadData();
+            this.Close();
         }        
 
         private void CreateWorker()
@@ -97,7 +102,7 @@ namespace com.hitops.PLN.RSC.ResourcePlan
 
             try
             {
-                hTable.Add("WORKER_ID", tbxWrker.Text);
+                hTable.Add("WORKER_ID", tbxWrkerID.Text);
                 hTable.Add("WORKER_NAME", tbxName.Text);
                 hTable.Add("TEAM", cmbTeam.Text);
                 hTable.Add("WORKER_KND", "Y"); //앞으로 사용안함. 기본 "Y" 로 넣어줌. Available 의미로 사용되었음
@@ -113,7 +118,6 @@ namespace com.hitops.PLN.RSC.ResourcePlan
 
                 if (((Hashtable)aList[0])["CNT"].ToString() == "0")
                 {
-                    //RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-CRTWORKERINFO", _mID, hTable);
                     RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-CRTWORKERINFO2", _mID, hTable);
                     if(_Form != null)
                         _Form.sLoadData();
@@ -122,11 +126,7 @@ namespace com.hitops.PLN.RSC.ResourcePlan
                 {
                     if (MessageBox.Show("동일한 기사정보가 존재합니다. 수정하시겠습니까?", "Update Confrim", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
-                        //RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-UPDWORKERINFO", _mID, hTable);
                         RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-UPDWORKERINFO2", _mID, hTable);
-                        if (_Form != null)
-                            _Form.sLoadData();
-                        this.Close();
                     }
                 }
             }
@@ -135,41 +135,59 @@ namespace com.hitops.PLN.RSC.ResourcePlan
                 MessageBox.Show(ex.Message1);
             }
 
-        }        
+        }
 
-        private void UpdateWorker()
+        private void MergeDetail()
         {
-            ArrayList aList  = new ArrayList();
-            Hashtable hTable = new Hashtable();
+            ArrayList arMandatory = new ArrayList();
+            arMandatory.Add(cmbEqp_Main);
+            arMandatory.Add(cmbCls_Main);
 
-            hTable.Add("WORKER_ID",  tbxWrker.Text);
-            hTable.Add("WORKER_NAME",tbxName.Text);
-            hTable.Add("TEAM",       cmbTeam.Text);
-            hTable.Add("WORKER_KND", "Y"); //앞으로 사용안함. 기본 "Y" 로 넣어줌. Available 의미로 사용되었음
-            hTable.Add("PASWRD",     tbxPwd.Text);
-            hTable.Add("EMPLOY_TYP", cmbEmpType.Text.Substring(0, 1));
-            hTable.Add("CHIEF_TAG",  "Y");
-            hTable.Add("AUTHORITY", cmbAut.SelectedIndex.ToString());
-            hTable.Add("UPDATE_PSN", CommFunc.gloUserID);
+            if (!CommFunc.ControlMandatoryItem(arMandatory)) return;
+
+            ArrayList aParam = new ArrayList();
+            
+            Hashtable hTable = new Hashtable();
+            hTable.Add("WORKER_ID", tbxWrkerID.Text);
+            hTable.Add("EQP_ROL_TYP", cmbEqp_Main.Text);
+            hTable.Add("MAIN_TAG", "Y");
+            hTable.Add("MAIN_EQP_NO", "");
+            hTable.Add("SKILL_LVL", cmbCls_Main.Text);
+            hTable.Add("SEQ", "1");
+            hTable.Add("SAVE_PSN", CommFunc.gloUserID);
+
+            Hashtable hTable2 = new Hashtable();
+            hTable2.Add("WORKER_ID", tbxWrkerID.Text);
+            hTable2.Add("EQP_ROL_TYP", cmbEqp_Sub1.Text);
+            hTable2.Add("MAIN_TAG", "N");
+            hTable2.Add("MAIN_EQP_NO", "");
+            hTable2.Add("SKILL_LVL", cmbCls_Sub1.Text);
+            hTable2.Add("SEQ", "2");
+            hTable2.Add("SAVE_PSN", CommFunc.gloUserID);
+
+            Hashtable hTable3 = new Hashtable();
+            hTable3.Add("WORKER_ID", tbxWrkerID.Text);
+            hTable3.Add("EQP_ROL_TYP", cmbEqp_Sub2.Text);
+            hTable3.Add("MAIN_TAG", "N");
+            hTable3.Add("MAIN_EQP_NO", "");
+            hTable3.Add("SKILL_LVL", cmbCls_Sub2.Text);
+            hTable3.Add("SEQ", "2");
+            hTable3.Add("SAVE_PSN", CommFunc.gloUserID);
+
+            aParam.Add(hTable);
+            aParam.Add(hTable2);
+            aParam.Add(hTable3);
 
             try
             {
-                aList = (ArrayList)RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-GETWORKERINFO", _mID, hTable);
-
-                if (((Hashtable)aList[0])["CNT"].ToString() != "0")
-                {
-                    RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-UPDWORKERINFO", _mID, hTable);
-                }
-                else
-                {
-                    MessageBox.Show("Update 가능한 항목이 없습니다", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                RequestHandler.Request(CommFunc.gloFrameworkServerName, "HITOPS3-PLN-RSC-S-CRTWORKEREQP", _mID, aParam);
             }
             catch (HMMException ex)
             {
                 MessageBox.Show(ex.Message1);
             }
         }
+
 
         private void frmWorkerEntry_Load(object sender, EventArgs e)
         {
