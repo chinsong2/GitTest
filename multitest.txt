@@ -1,8 +1,4 @@
 aaaa
 bbbb
-<<<<<<< HEAD
 cccc user2
-=======
-cccc user1
->>>>>>> b3e18ccee4a74841ec9974d0da7cc08f1349fc21
 dddd
